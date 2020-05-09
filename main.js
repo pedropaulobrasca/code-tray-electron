@@ -1,44 +1,75 @@
-const path = require('path');
-const {app, Menu, Tray, dialog} = require('electron');
+const {
+  resolve,
+} = require('path');
+const {
+  app,
+  Menu,
+  Tray,
+  dialog,
+} = require('electron');
 const Store = require('electron-store');
-const assetsDic = path.join(__dirname, 'assets');
+
+const assetsDic = resolve(__dirname, 'assets', 'icon-tray.png');
 
 const schema = {
-  teste: {
-    type: 'array',
+  projects: {
+    type: 'string',
   },
-}
-const store = new Store({schema});
+};
+const store = new Store({ schema });
 
 app.on('ready', () => {
-  const tray = new Tray(path.join(assetsDic, 'icon-tray.png'));
+  const tray = new Tray(assetsDic);
+  const storedProjects = store.get('projects');
+  const projects = storedProjects ? JSON.parse(storedProjects) : [];
 
   const contextMenu = Menu.buildFromTemplate([
-    {label: '🎲 Exibe store', click() {
-      console.log(store.get('teste'));
-    }},
-    {label: '🧹 Limpar store', click() {
-      store.clear();
-      dialog.showMessageBox({
-        type: 'info',
-        message: 'Store foi apagado com sucesso!',
-        title: '❗'
-      })
-    }},
-    {type: 'separator'},
-    {label: '🔁 Reload', click() {
-      app.quit();
-      app.relaunch();
-    }},
-    {label: '❌ Quit', click() {
-      app.quit();
-    }},
+    {
+      label: '🎲 Exibe store',
+      click() {
+        console.log(store.get('projects[]'));
+      },
+    },
+    {
+      label: '🧹 Limpar store',
+      click() {
+        store.clear();
+        dialog.showMessageBox({
+          type: 'info',
+          message: 'Store foi apagado com sucesso!',
+          title: '❗',
+        });
+      },
+    },
+    { type: 'separator' },
+    {
+      label: '🔁 Reload',
+      click() {
+        app.quit();
+        app.relaunch();
+      },
+    },
+    {
+      label: '❌ Quit',
+      click() {
+        app.quit();
+      },
+    },
   ]);
-  
+
   tray.setContextMenu(contextMenu);
   tray.on('click', () => {
-    const caminho = dialog.showOpenDialog({ properties: ['openDirectory']}).then((result) => {
-      store.set('teste', result.filePaths);
-    });
-  })
+    dialog.showOpenDialog({ properties: ['openDirectory'] })
+      .then((result) => {
+        const nome = result.filePaths.toString().split('\\');
+        store.set('projects[]', [...projects, {
+          caminho: `${result.filePaths}`,
+          nome: nome[nome.length - 1],
+        }]);
+        // console.log(store.get('projects[]'));
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  });
 });
