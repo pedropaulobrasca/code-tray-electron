@@ -4,6 +4,7 @@
   "description": "App de testes.",
   "main": "main.js",
   "dependencies": {
+    "cross-spawn": "^7.0.2",
     "electron": "^8.2.5",
     "electron-store": "^5.1.1"
   },
